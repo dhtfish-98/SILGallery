@@ -1,0 +1,70 @@
+{
+  "project": "SILGallery",
+  "file_mapping": {
+    ".gitignore": ".gitignore",
+    "LICENSE.md": "LICENSE.md",
+    "README.md": "README.md",
+    "SILInspector.xcodeproj/project.pbxproj": "SILGallery.xcodeproj/project.pbxproj",
+    "SILInspector.xcodeproj/project.xcworkspace/contents.xcworkspacedata": "SILGallery.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
+    "SILInspector.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist": "SILGallery.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+    "SILInspector/AppDelegate.swift": [
+      "GallerySources/GalleryController.swift",
+      "GallerySources/GalleryActions.swift",
+      "GallerySources/GalleryCompilation.swift"
+    ],
+    "SILInspector/Assets.xcassets/AppIcon.appiconset/Contents.json": "GallerySources/GalleryAssets.xcassets/AppIcon.appiconset/Contents.json",
+    "SILInspector/Base.lproj/MainMenu.xib": "GallerySources/Base.lproj/GalleryMenu.xib",
+    "SILInspector/Info.plist": "GallerySources/GalleryInfo.plist",
+    "SILInspectorTests/Info.plist": "GalleryChecks/GalleryChecksInfo.plist",
+    "SILInspectorTests/SILInspectorTests.swift": "GalleryChecks/GalleryFixtureTests.swift"
+  },
+  "member_mapping": {
+    "AppDelegate": "GalleryController",
+    "window": "galleryWindow",
+    "tabView": "galleryTabs",
+    "programText": "galleryCommandText",
+    "sourceView": "gallerySourcePane",
+    "silView": "galleryRawPane",
+    "canonicalView": "galleryCanonicalPane",
+    "asmView": "galleryAssemblyPane",
+    "irView": "galleryIRPane",
+    "astView": "galleryASTPane",
+    "parseView": "galleryParsePane",
+    "demangle": "galleryDemangling",
+    "optimize": "galleryOptimization",
+    "moduleOptimize": "galleryWholeModule",
+    "parseAsLibrary": "galleryLibrary",
+    "changeFontSize": "galleryChangeFontSize",
+    "setFontSize": "galleryApplyFontSize",
+    "source": "gallerySource",
+    "sil": "galleryRaw",
+    "canonical": "galleryCanonical",
+    "parse": "galleryParse",
+    "ast": "galleryAST",
+    "asm": "galleryAssembly",
+    "ir": "galleryIR",
+    "updateSIL": "galleryUpdateRaw",
+    "updateCanonical": "galleryUpdateCanonical",
+    "updateAST": "galleryUpdateAST",
+    "updateParse": "galleryUpdateParse",
+    "updateIR": "galleryUpdateIR",
+    "updateAsm": "galleryUpdateAssembly",
+    "withParseAsLibrary": "galleryWithLibrary",
+    "withOptimize": "galleryWithOptimization",
+    "withModuleOptimize": "galleryWithWholeModule",
+    "withDemangle": "galleryWithDemangling",
+    "runProgram": "galleryRunCommand"
+  },
+  "compatibility_exceptions": [
+    "Cocoa protocol callback names and external API properties",
+    "Swift implicit newValue",
+    "Xcode metadata filenames",
+    "SIL/IR emitted wire module identity SILInspector",
+    "upstream copyright/license"
+  ],
+  "architecture": [
+    "Cocoa controller and outlets",
+    "UI actions and Cocoa callbacks",
+    "compiler command plan and process exchange"
+  ]
+}

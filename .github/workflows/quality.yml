@@ -1,0 +1,25 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-and-equivalence:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: alblue/SILInspector
+          ref: 6a69cea5126af73dc1964cf92bfa397da3e18752
+          path: _reference
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build application
+        run: xcodebuild -project SILGallery.xcodeproj -target SILGallery -configuration Release CODE_SIGNING_ALLOWED=NO build
+      - name: Compare real controller and compiler outputs
+        run: python3 checks/gallery_equivalence.py --reference _reference/SILInspector/AppDelegate.swift
