@@ -23,3 +23,5 @@ jobs:
         run: xcodebuild -project SILGallery.xcodeproj -target SILGallery -configuration Release CODE_SIGNING_ALLOWED=NO build
       - name: Compare real controller and compiler outputs
         run: python3 checks/gallery_equivalence.py --reference _reference/SILInspector/AppDelegate.swift
+      - name: Check bounded process exchange and large source
+        run: python3 checks/gallery_process_safety.py
