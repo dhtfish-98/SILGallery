@@ -1,6 +1,8 @@
+> 目录已整理：文档在「项目文档」，构建、缓存与暂存输入在「Build」。从仓库根目录运行 `python3 构建.py --build`；如需使用本文原有源码命令，先运行 `python3 构建.py --stage --ci`，再进入 `Build/源码`。暂存会恢复原输入路径。现有版本和历史验证记录按各自提交理解。
+
 # SILGallery
 
-防御用途、实际能力及本轮验证范围见 [DEFENSIVE_SCOPE.md](DEFENSIVE_SCOPE.md)。
+防御用途、实际能力及本轮验证范围见 [DEFENSIVE_SCOPE.md](<DEFENSIVE_SCOPE.md>)。
 
 SILGallery is a macOS companion application for inspecting Swift source, raw/canonical SIL, AST, parser output, LLVM IR and assembly.
 
@@ -26,13 +28,13 @@ The emitted compiler module label `SILInspector` is preserved as wire compatibil
 
 ## Verify
 
-Check out the exact upstream commit from [ORIGIN.md](ORIGIN.md), then run:
+Check out the exact upstream commit from [ORIGIN.md](<ORIGIN.md>), then run:
 
 ```sh
 python3 checks/gallery_equivalence.py --reference /path/to/upstream/SILInspector/AppDelegate.swift
 python3 checks/gallery_process_safety.py
 ```
 
-See [VALIDATION.md](VALIDATION.md) for the actual checks and their scope.
+See [VALIDATION.md](<VALIDATION.md>) for the actual checks and their scope.
 
 Earlier v1.0.0 packages contain the inherited subprocess exchange. Rebuild the current source for the defensive process policy.

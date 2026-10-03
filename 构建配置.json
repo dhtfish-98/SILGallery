@@ -1,0 +1,35 @@
+{
+  "schema": "project-build-layout.v1",
+  "project": "SILGallery",
+  "author": "dhtfish98",
+  "kind": "manual",
+  "base_public_commit": "e6c2050e35e6a1e934be3c08ce732265ccd848b6",
+  "restored_inputs": [
+    {
+      "original": "DEFENSIVE_SCOPE.md",
+      "stored": "项目文档/DEFENSIVE_SCOPE.md",
+      "sha256": "68230fd51fca174335c67e101f6e19cc17fd26473ec18ecc58c34fe1f9e9c721"
+    },
+    {
+      "original": "LICENSE.md",
+      "stored": "项目文档/LICENSE.md",
+      "sha256": "e5ea2c1c063377582a7fd6fb236acc4805edc67313f1bcb7a7bc622efa834441"
+    },
+    {
+      "original": "ORIGIN.md",
+      "stored": "项目文档/ORIGIN.md",
+      "sha256": "f006f8f7deab0ef8ff7f8e6cab9e5dacd0e6f9921a90a0ef25788aa207e68754"
+    },
+    {
+      "original": "README.md",
+      "stored": "项目文档/README.md",
+      "sha256": "592deb690113ae08fe676be30fa8ab4c5ef87fa33cbe5fc63ac97ab2668417c6"
+    },
+    {
+      "original": "VALIDATION.md",
+      "stored": "项目文档/VALIDATION.md",
+      "sha256": "6df960154ed7383c455d114de33ef1a71d200ada7bd8e5ad9515a1843cc8a037"
+    }
+  ],
+  "platform_entries": []
+}
