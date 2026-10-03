@@ -13,9 +13,9 @@ jobs:
       run:
         working-directory: ${{ github.workspace }}/Build/源码
     env:
-      TMPDIR: ${{ github.workspace }}/Build/临时
-      TMP: ${{ github.workspace }}/Build/临时
-      TEMP: ${{ github.workspace }}/Build/临时
+      TMPDIR: ${{ github.workspace }}/Build/tmp
+      TMP: ${{ github.workspace }}/Build/tmp
+      TEMP: ${{ github.workspace }}/Build/tmp
       PYTHONPYCACHEPREFIX: ${{ github.workspace }}/Build/缓存/python
       PIP_CACHE_DIR: ${{ github.workspace }}/Build/缓存/pip
       npm_config_cache: ${{ github.workspace }}/Build/缓存/npm
@@ -33,7 +33,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Stage source and restored project inputs under Build
-        run: ${{ runner.os == 'Windows' && 'python' || 'python3' }} 构建.py --stage --ci
+        run: |
+          ${{ runner.os == 'Windows' && 'python' || 'python3' }} 构建.py --stage --ci
+          mkdir -p "$TMPDIR"
         working-directory: ${{ github.workspace }}
       - uses: actions/checkout@v4
         with:
