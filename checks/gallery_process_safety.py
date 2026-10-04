@@ -49,6 +49,32 @@ else {
         precondition(large.status==0 && large.stderr.utf8.count==512*1024 && large.stdout.hasSuffix("input=1048576"))
         let invalidBytes=try GalleryProcessExchange.galleryExecute(child,arguments: ["bytes"],input: Data())
         precondition(invalidBytes.status==0 && !invalidBytes.stdout.isEmpty)
+        let sampleURL=URL(fileURLWithPath: child).deletingLastPathComponent().appendingPathComponent("bounded-output")
+        try Data(repeating: 65,count: 8).write(to: sampleURL)
+        let exact=try GalleryProcessExchange.galleryReadOutput(sampleURL,limit: 8)
+        precondition(exact=="AAAAAAAA")
+        try Data(repeating: 65,count: 9).write(to: sampleURL)
+        var excessRejected=false
+        do { _=try GalleryProcessExchange.galleryReadOutput(sampleURL,limit: 8) } catch { excessRejected=true }
+        precondition(excessRejected)
+        try Data([0xff,0xfe]).write(to: sampleURL)
+        let invalidUTF8=try GalleryProcessExchange.galleryReadOutput(sampleURL,limit: 2)
+        precondition(!invalidUTF8.isEmpty)
+        for invalidLimit in [0,-1,Int.max,32*1024*1024+1] {
+            var rejected=false
+            do { _=try GalleryProcessExchange.galleryReadOutput(sampleURL,limit: invalidLimit) } catch { rejected=true }
+            precondition(rejected)
+        }
+        for invalidTimeout in [Double.nan,Double.infinity,-Double.infinity,0,-1] {
+            var rejected=false
+            do { _=try GalleryProcessExchange.galleryExecute(child,arguments: ["bytes"],input: Data(),timeout: invalidTimeout) } catch { rejected=true }
+            precondition(rejected)
+        }
+        for invalidLimit in [0,-1,Int.max,32*1024*1024+1] {
+            var rejected=false
+            do { _=try GalleryProcessExchange.galleryExecute(child,arguments: ["bytes"],input: Data(),outputLimit: invalidLimit) } catch { rejected=true }
+            precondition(rejected)
+        }
         for scenario in ["timeout","output","input","launch"] {
             var failed=false
             do {
@@ -66,7 +92,7 @@ else {
         precondition(output.status==0 && output.stdout.contains("ownedAdd"))
         let malformed=try GalleryProcessExchange.galleryExecute("/usr/bin/xcrun",arguments: ["swiftc","-","-emit-sil"],input: Data("public func {".utf8))
         precondition(malformed.status != 0 && !malformed.stderr.isEmpty)
-        print("PASS: 96 fixed compiler plans, rejected shell mode, 1 MiB input with both output streams, invalid bytes, timeout/size/launch errors, large and invalid Swift source.")
+        print("PASS: 96 fixed compiler plans, rejected shell mode, bounded exact-byte file reads, finite timeout/output limits, process failures, large and invalid Swift source.")
     }
 }
 ''')

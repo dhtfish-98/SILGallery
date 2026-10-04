@@ -1,5 +1,11 @@
 # Validation
 
+## Version 1.0.3 boundary maintenance — 2026-10-04
+
+The process check now rejects non-finite timeouts and output limits outside 1–32 MiB before launch. Its post-process file reader checks each byte chunk, including the first byte beyond an exact limit. Missing or mismatched Cocoa text views return a status instead of force-cast termination, and source UTF-8 bytes are counted before allocating the compiler input data. Normal six-mode command composition and output behavior are unchanged.
+
+The current source was checked with the process boundary driver, two Xcode tests, 96 compiler plans, 36 real compiler/demangler outputs, 10 outlet and five action bindings, and an arm64/x86_64 Release build. These local checks are bound to the final source commit only after that commit and its CI run are independently verified; they do not prove manual GUI use, signing, notarization or CVP eligibility.
+
 ## Current subprocess rewrite — 2026-10-02
 
 The current Release application builds for arm64/x86_64 with Xcode, Swift language mode 5, deployment target 12 and signing disabled. This is a build result; manual interaction is not claimed.

@@ -31,6 +31,23 @@ struct GalleryProcessExchange {
     static func galleryFailure(_ message: String) -> NSError {
         NSError(domain: "SILGallery", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
     }
+    static func galleryReadOutput(_ url: URL, limit: Int) throws -> String {
+        guard (1...32 * 1024 * 1024).contains(limit) else {
+            throw galleryFailure("Input or process limits are invalid.")
+        }
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        var bytes = Data()
+        while true {
+            let remaining = limit - bytes.count
+            let chunk = try handle.read(upToCount: min(64 * 1024, remaining + 1)) ?? Data()
+            if chunk.isEmpty { return String(decoding: bytes, as: UTF8.self) }
+            guard chunk.count <= remaining else {
+                throw galleryFailure("Compiler output exceeded the configured limit.")
+            }
+            bytes.append(chunk)
+        }
+    }
     static func galleryStop(_ process: Process) {
         if !process.isRunning { return }
         process.terminate()
@@ -43,7 +60,8 @@ struct GalleryProcessExchange {
     }
     static func galleryExecute(_ executable: String, arguments: [String], input: Data,
                                timeout: TimeInterval = 30, outputLimit: Int = 32 * 1024 * 1024) throws -> GalleryProcessOutput {
-        guard input.count <= 32 * 1024 * 1024, timeout > 0, outputLimit > 0 else {
+        guard input.count <= 32 * 1024 * 1024, timeout.isFinite, timeout > 0,
+              (1...32 * 1024 * 1024).contains(outputLimit) else {
             throw galleryFailure("Input or process limits are invalid.")
         }
         let manager = FileManager.default
@@ -91,8 +109,8 @@ struct GalleryProcessExchange {
             guard outputSize <= outputLimit, errorSize <= outputLimit else {
                 throw galleryFailure("Compiler output exceeded the configured limit.")
             }
-            return GalleryProcessOutput(stdout: String(decoding: try Data(contentsOf: outputURL), as: UTF8.self),
-                                        stderr: String(decoding: try Data(contentsOf: errorURL), as: UTF8.self),
+            return GalleryProcessOutput(stdout: try galleryReadOutput(outputURL, limit: outputLimit),
+                                        stderr: try galleryReadOutput(errorURL, limit: outputLimit),
                                         status: process.terminationStatus)
         } catch {
             galleryStop(process)
@@ -116,20 +134,32 @@ extension GalleryCommandPlan {
 }
 
 extension GalleryController {
-    func galleryUpdateRaw() { galleryRaw = galleryRunCommand("swiftc - -emit-silgen") }
-    func galleryUpdateCanonical() { galleryCanonical = galleryRunCommand("swiftc - -emit-sil") }
-    func galleryUpdateAST() { galleryAST = galleryRunCommand("swiftc - -dump-ast") }
-    func galleryUpdateParse() { galleryParse = galleryRunCommand("swiftc - -dump-parse") }
-    func galleryUpdateIR() { galleryIR = galleryRunCommand("swiftc - -emit-ir") }
-    func galleryUpdateAssembly() { galleryAssembly = galleryRunCommand("swiftc - -emit-assembly") }
+    private func galleryUpdate(_ pane: NSScrollView?, command: String) {
+        guard let text = galleryText(pane) else {
+            galleryCommandText?.stringValue = "Output text view is unavailable."
+            return
+        }
+        text.string = galleryRunCommand(command)
+    }
+    func galleryUpdateRaw() { galleryUpdate(galleryRawPane, command: "swiftc - -emit-silgen") }
+    func galleryUpdateCanonical() { galleryUpdate(galleryCanonicalPane, command: "swiftc - -emit-sil") }
+    func galleryUpdateAST() { galleryUpdate(galleryASTPane, command: "swiftc - -dump-ast") }
+    func galleryUpdateParse() { galleryUpdate(galleryParsePane, command: "swiftc - -dump-parse") }
+    func galleryUpdateIR() { galleryUpdate(galleryIRPane, command: "swiftc - -emit-ir") }
+    func galleryUpdateAssembly() { galleryUpdate(galleryAssemblyPane, command: "swiftc - -emit-assembly") }
 
     func galleryRunCommand(_ galleryProgram: String) -> String {
         let galleryPlan = GalleryCommandPlan(galleryLibrary: galleryLibrary, galleryWholeModule: galleryWholeModule,
                                              galleryOptimization: galleryOptimization, galleryDemangling: galleryDemangling)
         guard let arguments = galleryPlan.galleryArguments(galleryProgram) else { return "Unsupported compiler mode." }
-        galleryCommandText.stringValue = galleryPlan.galleryCompose(galleryProgram)
-        let input = Data(gallerySource.utf8)
-        guard input.count <= 2 * 1024 * 1024 else { return "Source exceeds the 2 MiB limit." }
+        guard let sourceView = galleryText(gallerySourcePane) else {
+            galleryCommandText?.stringValue = "Source text view is unavailable."
+            return "Source text view is unavailable."
+        }
+        galleryCommandText?.stringValue = galleryPlan.galleryCompose(galleryProgram)
+        let source = sourceView.string
+        guard source.utf8.count <= 2 * 1024 * 1024 else { return "Source exceeds the 2 MiB limit." }
+        let input = Data(source.utf8)
         do {
             let output = try GalleryProcessExchange.galleryExecute("/usr/bin/xcrun", arguments: arguments, input: input)
             if output.stderr != "" && output.stderr != "\n" { return output.stderr }

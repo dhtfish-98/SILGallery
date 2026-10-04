@@ -19,32 +19,49 @@ class GalleryController: NSObject, NSApplicationDelegate, NSTabViewDelegate {
     var galleryWholeModule = false
     var galleryLibrary = false
 
+    func galleryText(_ pane: NSScrollView?) -> NSTextView? {
+        pane?.documentView as? NSTextView
+    }
+    private func galleryRead(_ pane: NSScrollView?) -> String {
+        guard let text = galleryText(pane) else {
+            galleryCommandText?.stringValue = "A text view is unavailable."
+            return ""
+        }
+        return text.string
+    }
+    private func galleryWrite(_ value: String, to pane: NSScrollView?) {
+        guard let text = galleryText(pane) else {
+            galleryCommandText?.stringValue = "A text view is unavailable."
+            return
+        }
+        text.string = value
+    }
     var gallerySource: String {
-        get { (gallerySourcePane.documentView as! NSTextView).string }
-        set { (gallerySourcePane.documentView as! NSTextView).string = newValue }
+        get { galleryRead(gallerySourcePane) }
+        set { galleryWrite(newValue, to: gallerySourcePane) }
     }
     var galleryRaw: String {
-        get { (galleryRawPane.documentView as! NSTextView).string }
-        set { (galleryRawPane.documentView as! NSTextView).string = newValue }
+        get { galleryRead(galleryRawPane) }
+        set { galleryWrite(newValue, to: galleryRawPane) }
     }
     var galleryCanonical: String {
-        get { (galleryCanonicalPane.documentView as! NSTextView).string }
-        set { (galleryCanonicalPane.documentView as! NSTextView).string = newValue }
+        get { galleryRead(galleryCanonicalPane) }
+        set { galleryWrite(newValue, to: galleryCanonicalPane) }
     }
     var galleryParse: String {
-        get { (galleryParsePane.documentView as! NSTextView).string }
-        set { (galleryParsePane.documentView as! NSTextView).string = newValue }
+        get { galleryRead(galleryParsePane) }
+        set { galleryWrite(newValue, to: galleryParsePane) }
     }
     var galleryAST: String {
-        get { (galleryASTPane.documentView as! NSTextView).string }
-        set { (galleryASTPane.documentView as! NSTextView).string = newValue }
+        get { galleryRead(galleryASTPane) }
+        set { galleryWrite(newValue, to: galleryASTPane) }
     }
     var galleryAssembly: String {
-        get { (galleryAssemblyPane.documentView as! NSTextView).string }
-        set { (galleryAssemblyPane.documentView as! NSTextView).string = newValue }
+        get { galleryRead(galleryAssemblyPane) }
+        set { galleryWrite(newValue, to: galleryAssemblyPane) }
     }
     var galleryIR: String {
-        get { (galleryIRPane.documentView as! NSTextView).string }
-        set { (galleryIRPane.documentView as! NSTextView).string = newValue }
+        get { galleryRead(galleryIRPane) }
+        set { galleryWrite(newValue, to: galleryIRPane) }
     }
 }
