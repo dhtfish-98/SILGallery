@@ -1,5 +1,13 @@
 # Validation
 
+## Version 1.0.4 decoded-output budget — 2026-10-04
+
+Version 1.0.3 limited each stdout/stderr file's raw bytes, but replacement decoding could expand malformed UTF-8 beyond 32 MiB. The exact v1.0.3 reproduction used 11,534,336 raw `0xFF` bytes and produced 34,603,008 UTF-8 bytes; the demangler input then allocated the same larger count before rejection.
+
+The reader now uses the standard UTF-8 forward parser to count valid encoded bytes and three bytes for each replacement character before constructing a `String`. Each output stream must satisfy both its raw-byte and decoded UTF-8-byte limit. The demangler checks its text's UTF-8 count before creating input `Data`. Small invalid output remains replacement-decoded; it is not silently discarded. The process check compares parser counts against actual decoding for all 65,536 two-byte combinations and selected longer malformed sequences, tests exact and over-limit boundaries, and exercises 11 MiB invalid stdout and stderr children. The application test target uses Swift 5 and is run by CI.
+
+These limits are per stream; they are not a combined stdout-plus-stderr budget or a filesystem quota. Child-process polling can still allow a temporary file to grow between checks. Manual GUI operation, installed compiler/plugin behavior, signing, system installation, and CVP eligibility remain separate.
+
 ## Version 1.0.3 boundary maintenance — 2026-10-04
 
 The process check now rejects non-finite timeouts and output limits outside 1–32 MiB before launch. Its post-process file reader checks each byte chunk, including the first byte beyond an exact limit. Missing or mismatched Cocoa text views return a status instead of force-cast termination, and source UTF-8 bytes are counted before allocating the compiler input data. Normal six-mode command composition and output behavior are unchanged.

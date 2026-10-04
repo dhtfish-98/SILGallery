@@ -16,6 +16,8 @@ def main():
 let mode=CommandLine.arguments[1]
 if mode=="sleep" { Thread.sleep(forTimeInterval: 10) }
 else if mode=="bytes" { FileHandle.standardOutput.write(Data([0xff,0xfe])) }
+else if mode=="invalid-large" { FileHandle.standardOutput.write(Data(repeating: 0xff,count: 11*1024*1024)) }
+else if mode=="invalid-stderr" { FileHandle.standardError.write(Data(repeating: 0xff,count: 11*1024*1024)) }
 else {
     let block=Data(repeating: 65,count: 512*1024)
     FileHandle.standardError.write(block)
@@ -58,8 +60,33 @@ else {
         do { _=try GalleryProcessExchange.galleryReadOutput(sampleURL,limit: 8) } catch { excessRejected=true }
         precondition(excessRejected)
         try Data([0xff,0xfe]).write(to: sampleURL)
-        let invalidUTF8=try GalleryProcessExchange.galleryReadOutput(sampleURL,limit: 2)
-        precondition(!invalidUTF8.isEmpty)
+        let invalidUTF8=try GalleryProcessExchange.galleryReadOutput(sampleURL,limit: 6)
+        precondition(invalidUTF8.utf8.count==6)
+        var decodedLimitRejected=false
+        do { _=try GalleryProcessExchange.galleryReadOutput(sampleURL,limit: 5) } catch { decodedLimitRejected=true }
+        precondition(decodedLimitRejected)
+        let bounded=try GalleryProcessExchange.galleryBoundedInput(invalidUTF8,limit: 6)
+        precondition(bounded.count==6)
+        var secondInputRejected=false
+        do { _=try GalleryProcessExchange.galleryBoundedInput(invalidUTF8,limit: 5) } catch { secondInputRejected=true }
+        precondition(secondInputRejected)
+        for first in 0...255 {
+            for second in 0...255 {
+                let pair=[UInt8(first),UInt8(second)]
+                let counted=try GalleryProcessExchange.galleryDecodedByteCount(Data(pair),limit: 32*1024*1024)
+                precondition(counted==String(decoding: pair,as: UTF8.self).utf8.count)
+            }
+        }
+        for sequence in [[0xe2,0x82],[0xe2,0x82,0x41],[0xf0,0x9f,0x8d,0x8e],[0xed,0xa0,0x80],[0x41,0xff,0xc3,0xa9]] {
+            let bytes=sequence.map(UInt8.init)
+            let counted=try GalleryProcessExchange.galleryDecodedByteCount(Data(bytes),limit: 32*1024*1024)
+            precondition(counted==String(decoding: bytes,as: UTF8.self).utf8.count)
+        }
+        for mode in ["invalid-large","invalid-stderr"] {
+            var rejected=false
+            do { _=try GalleryProcessExchange.galleryExecute(child,arguments: [mode],input: Data()) } catch { rejected=true }
+            precondition(rejected,mode)
+        }
         for invalidLimit in [0,-1,Int.max,32*1024*1024+1] {
             var rejected=false
             do { _=try GalleryProcessExchange.galleryReadOutput(sampleURL,limit: invalidLimit) } catch { rejected=true }
@@ -92,7 +119,7 @@ else {
         precondition(output.status==0 && output.stdout.contains("ownedAdd"))
         let malformed=try GalleryProcessExchange.galleryExecute("/usr/bin/xcrun",arguments: ["swiftc","-","-emit-sil"],input: Data("public func {".utf8))
         precondition(malformed.status != 0 && !malformed.stderr.isEmpty)
-        print("PASS: 96 fixed compiler plans, rejected shell mode, bounded exact-byte file reads, finite timeout/output limits, process failures, large and invalid Swift source.")
+        print("PASS: 96 fixed compiler plans, raw and replacement-UTF8 output budgets, bounded demangler input, finite timeout/output limits, process failures, large and invalid Swift source.")
     }
 }
 ''')

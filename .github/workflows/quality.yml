@@ -47,6 +47,8 @@ jobs:
           python-version: "3.12"
       - name: Build application
         run: 'xcodebuild -project SILGallery.xcodeproj -target SILGallery -configuration Release CODE_SIGNING_ALLOWED=NO SYMROOT="$GITHUB_WORKSPACE/Build/输出/xcode-products" OBJROOT="$GITHUB_WORKSPACE/Build/输出/xcode-intermediates" build'
+      - name: Run application tests
+        run: 'xcodebuild -project SILGallery.xcodeproj -scheme SILGallery -configuration Debug -destination "platform=macOS" -derivedDataPath "$GITHUB_WORKSPACE/Build/输出/xcode-tests" CODE_SIGNING_ALLOWED=NO test'
       - name: Compare real controller and compiler outputs
         run: python3 checks/gallery_equivalence.py --reference _reference/SILInspector/AppDelegate.swift
       - name: Check bounded process exchange and large source

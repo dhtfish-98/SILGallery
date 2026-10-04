@@ -1,4 +1,4 @@
-// Restructured derivative of Alex Blewitt / Bandlem Ltd., 2015. MIT notices in LICENSE.md.
+// Restructured derivative of Alex Blewitt / Bandlem Ltd., 2015. MIT notices in 项目文档/LICENSE.md.
 import Foundation
 import Cocoa
 

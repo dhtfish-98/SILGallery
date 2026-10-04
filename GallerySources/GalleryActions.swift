@@ -1,4 +1,4 @@
-// UI connections and Cocoa protocol callbacks. See ORIGIN.md.
+// UI connections and Cocoa protocol callbacks. See 项目文档/ORIGIN.md.
 import Cocoa
 
 extension GalleryController {

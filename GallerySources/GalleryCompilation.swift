@@ -1,4 +1,4 @@
-// Compiler command composition and process exchange. See ORIGIN.md.
+// Compiler command composition and process exchange. See 项目文档/ORIGIN.md.
 import Foundation
 import Cocoa
 import Darwin
@@ -28,11 +28,39 @@ struct GalleryProcessOutput {
 }
 
 struct GalleryProcessExchange {
+    static let galleryByteLimit = 32 * 1024 * 1024
+
     static func galleryFailure(_ message: String) -> NSError {
         NSError(domain: "SILGallery", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
     }
+    static func galleryDecodedByteCount(_ bytes: Data, limit: Int) throws -> Int {
+        guard (1...galleryByteLimit).contains(limit) else {
+            throw galleryFailure("Input or process limits are invalid.")
+        }
+        var parser = Unicode.UTF8.ForwardParser()
+        var input = bytes.makeIterator()
+        var count = 0
+        while true {
+            let width: Int
+            switch parser.parseScalar(from: &input) {
+            case .valid(let scalar): width = scalar.count
+            case .error: width = 3 // UTF-8 width of the replacement character.
+            case .emptyInput: return count
+            }
+            guard width <= limit - count else {
+                throw galleryFailure("Compiler output exceeded the configured limit.")
+            }
+            count += width
+        }
+    }
+    static func galleryBoundedInput(_ text: String, limit: Int = galleryByteLimit) throws -> Data {
+        guard (1...galleryByteLimit).contains(limit), text.utf8.count <= limit else {
+            throw galleryFailure("Input or process limits are invalid.")
+        }
+        return Data(text.utf8)
+    }
     static func galleryReadOutput(_ url: URL, limit: Int) throws -> String {
-        guard (1...32 * 1024 * 1024).contains(limit) else {
+        guard (1...galleryByteLimit).contains(limit) else {
             throw galleryFailure("Input or process limits are invalid.")
         }
         let handle = try FileHandle(forReadingFrom: url)
@@ -41,7 +69,10 @@ struct GalleryProcessExchange {
         while true {
             let remaining = limit - bytes.count
             let chunk = try handle.read(upToCount: min(64 * 1024, remaining + 1)) ?? Data()
-            if chunk.isEmpty { return String(decoding: bytes, as: UTF8.self) }
+            if chunk.isEmpty {
+                _ = try galleryDecodedByteCount(bytes, limit: limit)
+                return String(decoding: bytes, as: UTF8.self)
+            }
             guard chunk.count <= remaining else {
                 throw galleryFailure("Compiler output exceeded the configured limit.")
             }
@@ -60,8 +91,8 @@ struct GalleryProcessExchange {
     }
     static func galleryExecute(_ executable: String, arguments: [String], input: Data,
                                timeout: TimeInterval = 30, outputLimit: Int = 32 * 1024 * 1024) throws -> GalleryProcessOutput {
-        guard input.count <= 32 * 1024 * 1024, timeout.isFinite, timeout > 0,
-              (1...32 * 1024 * 1024).contains(outputLimit) else {
+        guard input.count <= galleryByteLimit, timeout.isFinite, timeout > 0,
+              (1...galleryByteLimit).contains(outputLimit) else {
             throw galleryFailure("Input or process limits are invalid.")
         }
         let manager = FileManager.default
@@ -165,7 +196,8 @@ extension GalleryController {
             if output.stderr != "" && output.stderr != "\n" { return output.stderr }
             if output.status != 0 { return "Compiler exited with status \(output.status)." }
             if galleryDemangling {
-                let demangled = try GalleryProcessExchange.galleryExecute("/usr/bin/xcrun", arguments: ["swift-demangle"], input: Data(output.stdout.utf8))
+                let demangleInput = try GalleryProcessExchange.galleryBoundedInput(output.stdout)
+                let demangled = try GalleryProcessExchange.galleryExecute("/usr/bin/xcrun", arguments: ["swift-demangle"], input: demangleInput)
                 if demangled.stderr != "" && demangled.stderr != "\n" { return demangled.stderr }
                 if demangled.status != 0 { return "Demangler exited with status \(demangled.status)." }
                 return demangled.stdout
